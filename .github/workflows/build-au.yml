@@ -1,0 +1,38 @@
+name: Build Multiband Studio AU
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-au:
+    runs-on: macos-15-intel
+    steps:
+      - name: Check out plugin source
+        uses: actions/checkout@v4
+      - name: Install build tools
+        run: brew install cmake ninja
+      - name: Fetch iPlug2 framework
+        run: git clone --depth 1 --recursive https://github.com/iPlug2/iPlug2.git deps/iPlug2
+      - name: Configure Intel AU build
+        run: cmake -S . -B build -G Ninja -DIPLUG2_DIR="$GITHUB_WORKSPACE/deps/iPlug2" -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DIPLUG_DEPLOY_PLUGINS=OFF
+      - name: Compile Audio Unit
+        run: cmake --build build --target MultibandStudio-au --config Release --parallel 3
+      - name: Verify AU bundle exists
+        run: test -d build/out/MultibandStudio.component
+      - name: Package plugin
+        run: |
+          mkdir -p package
+          ditto -c -k --sequesterRsrc --keepParent build/out/MultibandStudio.component package/MultibandStudio-AU-Intel.zip
+          shasum -a 256 package/MultibandStudio-AU-Intel.zip > package/SHA256.txt
+      - name: Upload installable AU package
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultibandStudio-AU-Intel
+          path: package/
+          if-no-files-found: error
+          retention-days: 30
