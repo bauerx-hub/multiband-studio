@@ -1,6 +1,9 @@
 #include "MultibandStudio.h"
 #include "IPlug_include_in_plug_src.h"
 #include "IControls.h"
+#include <algorithm>
+#include <cmath>
+#include <string>
 
 namespace {
 constexpr int kSpectrumTag = 100;
@@ -46,7 +49,7 @@ double MultibandStudio::Splitter::High(double x) { return high[1].Process(high[0
 MultibandStudio::MultibandStudio(const InstanceInfo& info)
 : Plugin(info, MakeConfig(kNumParams, 1))
 {
-  GetParam(kXover1)->InitDouble("Low / Low-Mid", 120.0, 40.0, 500.0, 1.0, "Hz", IParam::kFlagsNone, "", IParam::ShapeLinear);
+  GetParam(kXover1)->InitDouble("Low / Low-Mid", 120.0, 40.0, 500.0, 1.0, "Hz");
   GetParam(kXover2)->InitDouble("Low-Mid / High-Mid", 1000.0, 250.0, 5000.0, 1.0, "Hz");
   GetParam(kXover3)->InitDouble("High-Mid / High", 6000.0, 1500.0, 16000.0, 1.0, "Hz");
   const int base[4] = {kLowThreshold,kLowMidThreshold,kHighMidThreshold,kHighThreshold};
@@ -63,15 +66,14 @@ MultibandStudio::MultibandStudio(const InstanceInfo& info)
   mLayoutFunc = [&](IGraphics* g) {
     g->AttachPanelBackground(kBg);
     g->EnableMouseOver(true);
-    g->LoadFont("Roboto-Regular", ROBOTO_FN);
-    IVStyle style = DEFAULT_STYLE
+      IVStyle style = DEFAULT_STYLE
       .WithColor(kBG, kPanel).WithColor(kFG, kText)
       .WithColor(kPR, IColor(255, 76, 150, 255))
       .WithLabelText(DEFAULT_LABEL_TEXT.WithFGColor(kMuted).WithSize(12.f))
       .WithValueText(DEFAULT_VALUE_TEXT.WithFGColor(kText).WithSize(13.f));
     const IRECT b = g->GetBounds();
-    g->AttachControl(new ITextControl(IRECT(28,12,600,54), "MULTIBAND  /  STUDIO", IText(26, kText, "Roboto-Regular")));
-    g->AttachControl(new ITextControl(IRECT(28,48,500,72), "FOUR-BAND DYNAMICS PROCESSOR", IText(11, kMuted, "Roboto-Regular")));
+    g->AttachControl(new ITextControl(IRECT(28,12,600,54), "MULTIBAND  /  STUDIO", IText(26, kText)));
+    g->AttachControl(new ITextControl(IRECT(28,48,500,72), "FOUR-BAND DYNAMICS PROCESSOR", IText(11, kMuted)));
     g->AttachControl(new IVSpectrumAnalyzerControl<2>(IRECT(28,82,1072,340), "LIVE SPECTRUM", style), kSpectrumTag);
     const char* xo[3] = {"XOVER 1","XOVER 2","XOVER 3"};
     const int xp[3] = {kXover1,kXover2,kXover3};
@@ -90,7 +92,7 @@ MultibandStudio::MultibandStudio(const InstanceInfo& info)
       float left = 28.f + band*264.f;
       IRECT panel(left,475,left+248.f,735);
       g->FillRoundRect(kPanel,panel,10.f);
-      g->AttachControl(new ITextControl(IRECT(left+14,482,left+230,510), (std::string("BAND 0")+char('1'+band)).c_str(), IText(15,kBand[band],"Roboto-Regular")));
+      g->AttachControl(new ITextControl(IRECT(left+14,482,left+230,510), (std::string("BAND 0")+char('1'+band)).c_str(), IText(15,kBand[band])));
       for (int j=0;j<5;j++) {
         int col=j%3, row=j/3;
         float x=left+8.f+col*78.f, y=514.f+row*106.f;
