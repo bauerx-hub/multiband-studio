@@ -11,6 +11,7 @@ find_package(iPlug2 REQUIRED)
 iplug_add_plugin(${PROJECT_NAME}
   SOURCES
     MultibandStudio.cpp
+    ${IPLUG2_DIR}/WDL/fft.c
     MultibandStudio.h
     resources/resource.h
   FORMATS AU
