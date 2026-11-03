@@ -14,5 +14,4 @@ iplug_add_plugin(${PROJECT_NAME}
     MultibandStudio.h
     resources/resource.h
   FORMATS AU
-  UI IGRAPHICS
 )
